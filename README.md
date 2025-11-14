@@ -1,6 +1,6 @@
 # SemDomCoverageTool
 
-Process and scripts to map Louw/Nida semantic domain–tagged Biblical Greek/Hebrew texts to SIL Global’s Semantic Domains (semdom.org), and to analyze the domains needed to cover specified scripture.
+Process and scripts to map Louw/Nida semantic domain–tagged Biblical Greek/Hebrew texts to SIL Global’s Semantic Domains ([semdom.org](https://semdom.org/)), and to analyze the domains needed to cover specified scripture.
 
 ## Overview
 This project provides a reproducible workflow to:
@@ -69,8 +69,8 @@ This project provides a reproducible workflow to:
 
 ## Licensing
 - Code: MIT License (see `LICENSE`).
-- Semantic Domains content: The Semantic Domains list and descriptions are maintained by SIL Global at https://semdom.org and are licensed under Creative Commons Attribution-ShareAlike (CC BY-SA 4.0). If you use or redistribute that content, follow their license terms.
+- Semantic Domains content: The Semantic Domains list and descriptions are maintained by SIL Global at [semdom.org](https://semdom.org/) and are licensed under Creative Commons Attribution-ShareAlike (CC BY-SA 4.0). If you use or redistribute that content, follow their license terms.
 
 ## Acknowledgments
-- The Luke data in this repository was derived from the MACULA Greek project: https://github.com/Clear-Bible/macula-greek and is licensed per: https://github.com/Clear-Bible/macula-greek/blob/main/LICENSE.md
+- The Luke data in this repository was derived from the [MACULA Greek](https://github.com/Clear-Bible/macula-greek) project and is licensed per: https://github.com/Clear-Bible/macula-greek/blob/main/LICENSE.md
 
