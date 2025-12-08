@@ -114,7 +114,7 @@ def output_results_to_csv(aggregated_data: Dict[str, Any], output_filename: str 
     
     try:
         with open(output_filename, 'w', newline='', encoding='utf-8') as outfile:
-            writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter='\t', quoting=csv.QUOTE_NONE, escapechar='\\')
+            writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             
             # Write rows, sorted by Semantic Domain code
