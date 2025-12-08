@@ -17,7 +17,7 @@ def analyze_louwNida_codes(csv_file):
     
     # Read CSV and extract codes
     with open(csv_file, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
+        reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
             code = row['LouwNida_Code'].strip().strip('"')
             
