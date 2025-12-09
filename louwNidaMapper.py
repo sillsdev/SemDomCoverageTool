@@ -54,7 +54,7 @@ def parse_semantic_domains(xml_file, output_csv):
     
     # Write to CSV
     with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        writer = csv.writer(csvfile, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
         
         # Write header
         writer.writerow(['LouwNida_Code', 'SemDom', 'SemDom_Name'])

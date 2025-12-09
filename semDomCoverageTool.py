@@ -35,7 +35,7 @@ def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     
     try:
         with open(csv_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter='\t')
             # Basic field validation
             if not all(field in reader.fieldnames for field in ['LouwNida_Code', 'SemDom', 'SemDom_Name']):
                 print("Error: CSV must contain 'LouwNida_Code', 'SemDom', and 'SemDom_Name' columns.")
@@ -114,7 +114,7 @@ def output_results_to_csv(aggregated_data: Dict[str, Any], output_filename: str 
     
     try:
         with open(output_filename, 'w', newline='', encoding='utf-8') as outfile:
-            writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter='\t', quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             
             # Write rows, sorted by Semantic Domain code
