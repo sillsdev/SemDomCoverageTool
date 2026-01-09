@@ -1,25 +1,10 @@
 import xml.etree.ElementTree as ET
 import csv
 import sys
-import re
 from collections import defaultdict
-from typing import Dict, Any, Set, List, Tuple
+from typing import Dict, Any, List, Tuple
 
-def parse_ln_code(ln_code: str) -> str:
-    """
-    Extract domain number from LN code for matching against the CSV mapping.
-    Converts '89.32' to '89', keeps '92a' as '92A', keeps '10' as '10'.
-    
-    Args:
-        ln_code: Format like '89.32', '92a', or '89'
-        
-    Returns:
-        Base domain number with optional letter (e.g., '89', '92A', '10')
-    """
-    if '.' in ln_code:
-        return ln_code.split('.')[0]
-    
-    return ln_code.upper()
+from utils import convert_domain_to_ln
 
 def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     """
@@ -61,6 +46,7 @@ def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
     Extracts the LN code, word, and reference from all <w> elements in the XML.
+    Reads domain codes from the 'domain' attribute and converts them to LN format.
     
     Args:
         xml_file: Path to the XML file
@@ -82,16 +68,16 @@ def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     # Search for all <w> elements anywhere in the document
     for word_element in root.findall('.//w'):
         # Extract data from attributes and text content
-        ln_code_full = word_element.get('ln', '').strip()
+        domain_codes = word_element.get('domain', '').strip()
         word = word_element.text.strip() if word_element.text else ""
         reference = word_element.get('ref', '').strip()
 
         # If any essential piece of data is missing, skip the element
-        if ln_code_full and word and reference:
-            # Handle potential multiple LN codes in one 'ln' attribute (e.g., "89.32 92.1")
-            for code in ln_code_full.split():
+        if domain_codes and word and reference:
+            # Handle potential multiple domain codes in one 'domain' attribute (e.g., "089017 092001")
+            for code in domain_codes.split():
                 if code.strip():
-                    xml_data.append((code.strip(), word, reference))
+                    xml_data.append((convert_domain_to_ln(code.strip()), word, reference))
 
     return xml_data
 
@@ -152,8 +138,8 @@ def output_results_to_csv(aggregated_data: Dict[str, Any], output_filename: str 
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python script.py <ln_mapping_csv_file> <annotated_xml_file>")
-        print("Example: python script.py louw_nida_mapping.csv your_file.xml")
+        print("Usage: python semDomCoverageTool.py <ln_mapping_csv_file> <annotated_xml_file>")
+        print("Example: python semDomCoverageTool.py LouwNidaToSemDom.csv annotated_text.xml")
         sys.exit(1)
     
     csv_file = sys.argv[1]
@@ -184,10 +170,8 @@ def main():
         unmatched_codes = set()
 
         for full_ln_code, word, reference in xml_ln_data:
-            base_ln_code = parse_ln_code(full_ln_code)
-
-            if base_ln_code in ln_mapping:
-                csv_info = ln_mapping[base_ln_code]
+            if full_ln_code in ln_mapping:
+                csv_info = ln_mapping[full_ln_code]
                 
                 # SemDom and SemDom_Name can be ';' separated, so we split them
                 sem_doms = csv_info['SemDom'].split(';')
@@ -204,7 +188,7 @@ def main():
                     aggregated_data[sem_dom]['WordToRefs'][word].add(reference)
                     aggregated_data[sem_dom]['AllReferences'].add(reference)
             else:
-                unmatched_codes.add(f"{full_ln_code} (Base: {base_ln_code})")
+                unmatched_codes.add(f"{full_ln_code}")
                 
         print(f"Aggregated data for {len(aggregated_data)} unique Semantic Domains.")
 
