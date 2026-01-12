@@ -4,6 +4,50 @@ import sys
 from collections import defaultdict
 from typing import List, Tuple, Dict, Any
 
+def convert_domain_to_ln(domain_code: str) -> str:
+    """
+    Convert a domain code to LN format.
+    - 3 digits: remove leading zeros (e.g., "089" -> "89")
+    - 6 digits: first 3 digits (remove leading zeros) + last 3 digits as letter
+      (001->A, 002->B, ..., 026->Z, 027->A', 028->B', ..., 052->Z', 053->A", etc.)
+    
+    Args:
+        domain_code: "089" or "089017"
+        
+    Returns:
+        LN code like "89" or "89Q"
+    """
+    if len(domain_code) == 3:
+        return str(int(domain_code))
+    elif len(domain_code) == 6:
+        base = str(int(domain_code[:3]))
+        suffix_num = int(domain_code[3:])
+        
+        if suffix_num == 0:
+            return base
+        
+        # Convert suffix to letter format
+        # 001-026: A-Z, 027-052: A'-Z', 053-078: A"-Z"
+        letter_index = (suffix_num - 1) % 26
+        prime_count = (suffix_num - 1) // 26
+        
+        letter = chr(ord('A') + letter_index)
+        if prime_count == 0:
+            primes = ''
+        elif prime_count == 1:
+            primes = "'"
+        elif prime_count == 2:
+            primes = '"'
+        else:
+            # Unexpected prime count (> 2), beyond standard LN notation
+            print(f"WARNING: Domain code {domain_code} has unexpected suffix {suffix_num} (prime_count={prime_count})")
+            primes = ''
+        
+        return base + letter + primes
+    else:
+        # Unexpected format, return as-is
+        return domain_code
+
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
     Extracts the LN code, word, and reference from all <w> elements in the XML.
@@ -28,16 +72,15 @@ def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     # Search for all <w> elements anywhere in the document
     for word_element in root.findall('.//w'):
         # Extract data from attributes and text content
-        ln_code_full = word_element.get('ln', '').strip()
+        domain_codes = word_element.get('domain', '').strip()
         word = word_element.text.strip() if word_element.text else ""
         reference = word_element.get('ref', '').strip()
 
         # If any essential piece of data is missing, skip the element
-        if ln_code_full and word and reference:
-            # Handle potential multiple LN codes in one 'ln' attribute (e.g., "89.32 92.1")
-            for code in ln_code_full.split():
-                if code.strip():
-                    xml_data.append((code.strip(), word, reference))
+        if domain_codes and word and reference:
+            # Handle potential multiple domain codes in one 'domain' attribute (e.g., "089017 092001")
+            ln_dom = ";".join([convert_domain_to_ln(dom.strip()) for dom in domain_codes.split() if dom.strip()])
+            xml_data.append((ln_dom, word, reference))
 
     return xml_data
 
@@ -54,7 +97,7 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
     
     fieldnames = [
         'Greek_Word',
-        'Ln_Decimal_Code',
+        'Ln_Domain',
         'Total_Unique_References',
         'Refs'
     ]
@@ -70,7 +113,7 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
                 
                 row = {
                     'Greek_Word': word,
-                    'Ln_Decimal_Code': ln_code,
+                    'Ln_Domain': ln_code,
                     'Total_Unique_References': len(refs),
                     'Refs': "; ".join(refs)
                 }

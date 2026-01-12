@@ -1,8 +1,25 @@
 import csv
 import sys
 import re
+import unicodedata
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
+
+def remove_accents(text: str) -> str:
+    """
+    Remove accents from Greek text for accent-insensitive matching.
+    Uses NFD decomposition to separate base characters from combining marks.
+    
+    Args:
+        text: Greek text with possible accents
+        
+    Returns:
+        Text with accents removed
+    """
+    # NFD decomposition: separate base characters from combining marks
+    nfd = unicodedata.normalize('NFD', text)
+    # Filter out combining marks (category Mn = Mark, nonspacing)
+    return ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
 
 def normalize_reference(ref: str) -> str:
     """
@@ -25,18 +42,19 @@ def normalize_reference(ref: str) -> str:
     
     return ""
 
-def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, Dict[str, str]]:
+def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[str, str]]]:
     """
     Load the biblical key terms from luk_terms.csv.
+    Multiple key terms can have the same Greek word but different glosses and references.
     
     Args:
         csv_file: Path to the luk_terms.csv file
         verbose: If True, print debug info
         
     Returns:
-        Dictionary mapping Term (cleaned ID) to {Gloss, Refs_set}
+        Dictionary mapping Term (normalized) to list of {Gloss, Refs_set}
     """
-    key_terms = {}
+    key_terms = defaultdict(list)
     
     try:
         with open(csv_file, 'r', encoding='utf-8') as f:
@@ -54,20 +72,23 @@ def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, Dict[str, 
                 # Parse and normalize references into a set
                 refs_set = parse_refs_to_set(refs_str)
                 
+                # Normalize term by removing accents for accent-insensitive matching
+                term_normalized = remove_accents(term)
+                
                 if verbose:
-                    print(f"DEBUG: {term}")
+                    print(f"DEBUG: {term} (normalized: {term_normalized})")
                     print(f"  Raw refs_str: '{refs_str}'")
                     print(f"  Parsed refs_set: {refs_set}")
                 
-                key_terms[term] = {
+                key_terms[term_normalized].append({
                     'Gloss': gloss,
                     'Refs': refs_set
-                }
+                })
     except FileNotFoundError:
         print(f"Error: Key terms CSV file not found at '{csv_file}'")
         sys.exit(1)
     
-    return key_terms
+    return dict(key_terms)
 
 def load_word_domain_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
@@ -115,13 +136,15 @@ def parse_refs_to_set(refs_str: str) -> Set[str]:
                 refs_set.add(normalized_ref)
     return refs_set
 
-def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, Dict[str, str]], verbose: bool = False) -> Tuple[List[Dict[str, str]], int, int]:
+def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, List[Dict[str, str]]], verbose: bool = False) -> Tuple[List[Dict[str, str]], int, int]:
     """
     Enrich word/domain analysis with key term information.
+    For each row, find all key terms matching the Greek_Word.
+    If only one matches, use it. If multiple match, pick the one with overlapping refs.
     
     Args:
         word_rows: List of word/domain analysis rows
-        key_terms: Dictionary of key terms with Gloss and Refs
+        key_terms: Dictionary mapping term to list of {Gloss, Refs}
         verbose: If True, print term matches
         
     Returns:
@@ -136,26 +159,44 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, D
         word_refs_str = row['Refs'].strip()
         word_refs_set = parse_refs_to_set(word_refs_str)
         
-        # Check if there's a matching key term
+        # Check if there's a matching key term (with accent-insensitive comparison)
         meaning = "unknown"
         is_key_term = "no"
         
-        if greek_word in key_terms:
-            term_info = key_terms[greek_word]
-            term_refs_set = term_info['Refs']
+        # Normalize the Greek word for accent-insensitive lookup
+        greek_word_normalized = remove_accents(greek_word)
+        
+        if greek_word_normalized in key_terms:
+            term_entries = key_terms[greek_word_normalized]
             
-            # Check if there are any matching references
-            if word_refs_set & term_refs_set:  # Set intersection
-                meaning = term_info['Gloss']
+            # If only one key term entry, use it
+            if len(term_entries) == 1:
+                meaning = term_entries[0]['Gloss']
                 is_key_term = "yes"
                 match_count += 1
-            else:
-                # Term matched but no overlapping references
-                term_match_no_ref_count += 1
+                
                 if verbose:
-                    print(f"  ~ {greek_word} (term found but no overlapping refs)")
-                    print(f"      Word refs: {word_refs_set}")
-                    print(f"      Term refs: {term_refs_set}")
+                    print(f"  + {greek_word} → {meaning} (single match)")
+            else:
+                # Multiple entries - find one with overlapping references
+                matched_entry = None
+                for entry in term_entries:
+                    if word_refs_set & entry['Refs']:  # Set intersection
+                        matched_entry = entry
+                        break
+                
+                if matched_entry:
+                    meaning = matched_entry['Gloss']
+                    is_key_term = "yes"
+                    match_count += 1
+                    
+                    if verbose:
+                        print(f"  + {greek_word} → {meaning} (matched by refs)")
+                else:
+                    # Found term(s) but no overlapping references
+                    term_match_no_ref_count += 1
+                    if verbose:
+                        print(f"  ~ {greek_word} ({len(term_entries)} terms found but no overlapping refs)")
         
         # Create enriched row with new columns after Greek_Word
         enriched_row = {'Greek_Word': row['Greek_Word']}
@@ -231,12 +272,6 @@ def main():
         print("Loading key terms from CSV...")
         key_terms = load_key_terms(key_terms_file, verbose)
         print(f"Loaded {len(key_terms)} unique key terms.")
-        
-        # Debug: Show sample of loaded key terms
-        if verbose:
-            print("\nSample of loaded key terms (first 5):")
-            for i, (term, info) in enumerate(list(key_terms.items())[:5]):
-                print(f"  {term}: Gloss='{info['Gloss']}', Refs={info['Refs']}")
         
         # 2. Load word/domain analysis
         print("Loading word/domain analysis CSV...")

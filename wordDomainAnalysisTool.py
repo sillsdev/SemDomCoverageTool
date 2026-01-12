@@ -3,22 +3,6 @@ import sys
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
-def parse_ln_code(ln_code: str) -> str:
-    """
-    Extract domain number from LN code for matching against the CSV mapping.
-    Converts '89.32' to '89', keeps '92a' as '92A', keeps '10' as '10'.
-    
-    Args:
-        ln_code: Format like '89.32', '92a', or '89'
-        
-    Returns:
-        Base domain number with optional letter (e.g., '89', '92A', '10')
-    """
-    if '.' in ln_code:
-        return ln_code.split('.')[0]
-    
-    return ln_code.upper()
-
 def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     """
     Load the LN code to semantic domain mapping from CSV.
@@ -72,8 +56,8 @@ def load_word_ln_analysis(csv_file: str) -> List[Dict[str, str]]:
         with open(csv_file, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f, delimiter='\t')
             # Basic field validation
-            if not all(field in reader.fieldnames for field in ['Greek_Word', 'Ln_Decimal_Code', 'Total_Unique_References', 'Refs']):
-                print("Error: CSV must contain 'Greek_Word', 'Ln_Decimal_Code', 'Total_Unique_References', and 'Refs' columns.")
+            if not all(field in reader.fieldnames for field in ['Greek_Word', 'Ln_Domain', 'Total_Unique_References', 'Refs']):
+                print("Error: CSV must contain 'Greek_Word', 'Ln_Domain', 'Total_Unique_References', and 'Refs' columns.")
                 sys.exit(1)
 
             for row in reader:
@@ -97,7 +81,7 @@ def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: 
     
     fieldnames = [
         'Greek_Word',
-        'Ln_Decimal_Code',
+        'Ln_Domain',
         'SemDom',
         'SemDom_Name',
         'Total_Unique_References',
@@ -149,33 +133,46 @@ def main():
         unmatched_codes = set()
         
         for row in word_ln_rows:
-            ln_code_full = row['Ln_Decimal_Code']
-            base_ln_code = parse_ln_code(ln_code_full)
+            ln_domain = row['Ln_Domain']
             
-            if base_ln_code in ln_mapping:
-                csv_info = ln_mapping[base_ln_code]
+            # Split semicolon-separated LN codes
+            ln_codes = [code.strip() for code in ln_domain.split(';') if code.strip()]
+            
+            # Look up each LN code and collect results
+            sem_doms = []
+            sem_dom_names = []
+            all_matched = True
+            
+            for ln_code in ln_codes:
+                csv_info = None
                 
-                enriched_row = {
-                    'Greek_Word': row['Greek_Word'],
-                    'Ln_Decimal_Code': row['Ln_Decimal_Code'],
-                    'SemDom': csv_info['SemDom'],
-                    'SemDom_Name': csv_info['SemDom_Name'],
-                    'Total_Unique_References': row['Total_Unique_References'],
-                    'Refs': row['Refs']
-                }
-                enriched_data.append(enriched_row)
-            else:
-                unmatched_codes.add(f"{ln_code_full} (Base: {base_ln_code})")
-                # Still add the row, but with empty SemDom/SemDom_Name
-                enriched_row = {
-                    'Greek_Word': row['Greek_Word'],
-                    'Ln_Decimal_Code': row['Ln_Decimal_Code'],
-                    'SemDom': '',
-                    'SemDom_Name': '',
-                    'Total_Unique_References': row['Total_Unique_References'],
-                    'Refs': row['Refs']
-                }
-                enriched_data.append(enriched_row)
+                if ln_code in ln_mapping:
+                    csv_info = ln_mapping[ln_code]
+                else:
+                    # If unmatched and has a letter/prime at the end, try without it
+                    if ln_code and (ln_code[-1].isalpha() or ln_code[-1] == "'" or ln_code[-1] == '"'):
+                        # Strip trailing letters and primes
+                        base = ln_code.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ'\"")
+                        if base and base in ln_mapping:
+                            csv_info = ln_mapping[base]
+                
+                if csv_info:
+                    sem_doms.append(csv_info['SemDom'])
+                    sem_dom_names.append(csv_info['SemDom_Name'])
+                else:
+                    unmatched_codes.add(ln_code)
+                    all_matched = False
+            
+            # Create enriched row
+            enriched_row = {
+                'Greek_Word': row['Greek_Word'],
+                'Ln_Domain': row['Ln_Domain'],
+                'SemDom': ';'.join(sem_doms) if sem_doms else '',
+                'SemDom_Name': ';'.join(sem_dom_names) if sem_dom_names else '',
+                'Total_Unique_References': row['Total_Unique_References'],
+                'Refs': row['Refs']
+            }
+            enriched_data.append(enriched_row)
 
         # 4. Output the results to the new CSV file
         output_results_to_csv(enriched_data)
@@ -186,12 +183,8 @@ def main():
             print(f"WARNING: {len(unmatched_codes)} UNMATCHED LN CODES FOUND")
             print("These codes were in the word/LN analysis but had no match in the mapping.")
             print("=" * 70)
-            # Only print a few to keep console clean
-            for i, code in enumerate(sorted(unmatched_codes)):
-                if i < 10:
-                    print(f"  - {code}")
-            if len(unmatched_codes) > 10:
-                print(f"  ...and {len(unmatched_codes) - 10} more.")
+            for code in sorted(unmatched_codes):
+                print(f"  - {code}")
         
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")

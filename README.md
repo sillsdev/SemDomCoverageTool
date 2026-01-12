@@ -43,25 +43,26 @@ This project provides a reproducible workflow to:
 
 - wordLnAnalysisTool.py
 
-  - Purpose: Analyze word usage by Louw/Nida code in an LN-tagged text.
-  - Input: Annotated text XML where tokens are marked with LN codes.
+  - Purpose: Analyze word usage by Louw/Nida domain code in an annotated Greek text. Converts domain codes (from `domain` attribute) to LN format.
+  - Input: Annotated text XML where tokens (`<w>` elements) are marked with domain codes (numeric 3-digit or 6-digit format).
   - Output: word_ln_analysis.csv containing, per (word, LN code) pair:
     - Greek_Word
-    - Ln_Decimal_Code
+    - Ln_Domain (LN code in format like "89", "89Q", "23C", etc.; semicolon-separated if multiple domains)
     - Total_Unique_References
-    - Refs (semicolon-separated list of all references)
-  - Note: Same word with different LN codes produces separate rows; same word with same LN code across multiple locations produces one row with all references.
+    - Refs (semicolon-separated list of all references with word positions, e.g., "LUK 1:5!44; LUK 1:55!16")
+  - Note: Converts domain codes (e.g., "089" → "89", "089017" → "89Q"). Same word with different LN codes produces separate rows; same word with same LN code across multiple locations produces one row with all references.
   - Run: `python wordLnAnalysisTool.py <AnnotatedText.xml>`
 
 - wordDomainAnalysisTool.py
 
-  - Purpose: Enrich word/LN analysis with semantic domain information.
+  - Purpose: Enrich word/LN analysis with semantic domain information by mapping LN codes to semantic domains.
   - Inputs:
     - word_ln_analysis.csv produced by wordLnAnalysisTool.py.
     - Mapping CSV (e.g., LouwNidaToSemDom.csv) produced by louwNidaMapper.py.
   - Output: word_domain_analysis.csv containing all columns from word_ln_analysis.csv plus:
-    - SemDom
-    - SemDom_Name
+    - SemDom (semantic domain code; semicolon-separated if multiple LN domains map to different semantic domains)
+    - SemDom_Name (semantic domain name; semicolon-separated if multiple)
+  - Note: For semicolon-separated LN codes (e.g., "23C;58D"), looks up each code independently and joins the results. Includes fallback matching (strips letters/primes if code not found).
   - Run: `python wordDomainAnalysisTool.py word_ln_analysis.csv LouwNidaToSemDom.csv`
 
 - biblicalTermsAnalysisTool.py
@@ -79,14 +80,19 @@ This project provides a reproducible workflow to:
   - Run: `python biblicalTermsAnalysisTool.py BiblicalTerms.xml <book>`
 
 - wordAnalysisTool.py
-  - Purpose: Enrich word/domain analysis with biblical key term meanings and matching.
+
+  - Purpose: Match Greek words to key terms.
   - Inputs:
     - `<book>_terms.csv` (e.g., luk_terms.csv) produced by biblicalTermsAnalysisTool.py, containing biblical key terms with glosses and references.
     - word_domain_analysis.csv produced by wordDomainAnalysisTool.py, containing words with semantic domain info.
   - Output: word_analysis.csv containing all columns from word_domain_analysis.csv plus (inserted after Greek_Word):
     - Meaning (gloss from matching key term, or "unknown")
-    - Is_Key_Term ("yes" if word matches a key term with overlapping references, "no" otherwise)
-  - Note: Reference matching ignores word positions; a match occurs when a word's references overlap with a key term's references in the same verse.
+    - Is_Key_Term ("yes" if word matches a key term, "no" otherwise)
+  - Matching Logic:
+    - Uses accent-insensitive matching (e.g., "Δαυίδ" and "Δαυὶδ" match the same term).
+    - Multiple key terms can share the same Greek word with different glosses/references.
+    - If only one key term matches a Greek word, uses it automatically.
+    - If multiple key terms match, selects the one with overlapping references (ignoring word positions).
   - Run: `python wordAnalysisTool.py <book>_terms.csv word_domain_analysis.csv`
   - Optional: `python wordAnalysisTool.py --verbose <book>_terms.csv word_domain_analysis.csv` (prints detailed matching info)
 
@@ -100,11 +106,13 @@ This project provides a reproducible workflow to:
     - LouwNidaCodes: `.//LouwNidaCodes/Uni` (semicolon-separated if multiple)
   - The script recursively traverses subdomains.
 
-- LN-tagged text XML
-  - Tokens are `<w>` elements anywhere in the document, with attributes:
-    - `ln`: an LN code like `89.32`, `92a`, or multiple codes separated by space.
-    - `ref`: a human-readable reference (e.g., verse or location).
-  - Example minimal shape: `<w ln="89.32" ref="Luk 1:1">...</w>`
+- LN-domain-coded text XML
+
+  - Tokens are `<w>` elements anywhere in the document with:
+    - `domain` attribute with numeric domain codes (3-digit like `089` or 6-digit like `089017`); space-separated if multiple.
+    - `ref`: a human-readable reference (e.g., verse or location, optionally with word position like `LUK 1:1!5`).
+  - Example:
+    - `<w domain="089017" ref="LUK 1:1!5">word</w>`
 
 ## Typical workflow
 
@@ -137,6 +145,7 @@ This project provides a reproducible workflow to:
    - Output: `luk_terms.csv` (you can rename/move as desired).
 
 7. Enrich word analysis with biblical key term meanings
+
    - `python wordAnalysisTool.py luk_terms.csv word_domain_analysis.csv`
    - Output: `word_analysis.csv` (you can rename/move as desired).
    - Add `--verbose` flag for detailed matching diagnostics.
