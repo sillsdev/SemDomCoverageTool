@@ -6,7 +6,6 @@ from typing import List, Tuple, Dict, Any
 
 from utils import convert_domain_to_ln
 
-
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
     Extracts the LN code, word, and reference from all <w> elements in the XML.
@@ -42,7 +41,6 @@ def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
             xml_data.append((ln_dom, word, reference))
 
     return xml_data
-
 
 def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_filename: str = 'word_louw_nida_analysis.csv'):
     """
@@ -118,7 +116,6 @@ def main():
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

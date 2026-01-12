@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Tuple
 
 from utils import convert_domain_to_ln
 
-
 def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     """
     Load the LN code to semantic domain mapping from CSV.
@@ -43,7 +42,6 @@ def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
         sys.exit(1)
         
     return ln_map
-
 
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
@@ -82,7 +80,6 @@ def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
                     xml_data.append((convert_domain_to_ln(code.strip()), word, reference))
 
     return xml_data
-
 
 def output_results_to_csv(aggregated_data: Dict[str, Any], output_filename: str = 'semantic_domains_coverage.csv'):
     """
@@ -214,7 +211,6 @@ def main():
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

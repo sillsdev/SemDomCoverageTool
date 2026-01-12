@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from utils import BOOK_NUMBERS, BOOK_NAMES, clean_term_id, parse_verse_reference
 
-
 def load_biblical_terms(xml_file: str) -> List[Dict]:
     """
     Load all biblical terms from the XML file.
@@ -54,7 +53,6 @@ def load_biblical_terms(xml_file: str) -> List[Dict]:
         })
     
     return terms
-
 
 def filter_and_format_terms(terms: List[Dict], book_name: str) -> List[Dict]:
     """
@@ -110,7 +108,6 @@ def filter_and_format_terms(terms: List[Dict], book_name: str) -> List[Dict]:
             })
     
     return result_terms
-
 
 def output_results_to_csv(terms: List[Dict], book_name: str, output_filename: str = None):
     """
@@ -176,7 +173,6 @@ def main():
         print("\nFull traceback:")
         traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

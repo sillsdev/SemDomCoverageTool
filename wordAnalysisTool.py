@@ -5,7 +5,6 @@ from typing import Dict, List, Set, Tuple
 
 from utils import remove_accents, normalize_reference
 
-
 def parse_refs_to_set(refs_str: str) -> Set[str]:
     """
     Parse a semicolon-separated reference string into a normalized set.
@@ -24,7 +23,6 @@ def parse_refs_to_set(refs_str: str) -> Set[str]:
             if normalized_ref:  # Only add non-empty normalized references
                 refs_set.add(normalized_ref)
     return refs_set
-
 
 def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[str, str]]]:
     """
@@ -74,7 +72,6 @@ def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[
     
     return dict(key_terms)
 
-
 def load_word_sem_dom_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
     Load the word/semantic domain analysis CSV file.
@@ -101,7 +98,6 @@ def load_word_sem_dom_analysis(csv_file: str) -> List[Dict[str, str]]:
         sys.exit(1)
     
     return rows
-
 
 def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, List[Dict[str, str]]], verbose: bool = False) -> Tuple[List[Dict[str, str]], int, int]:
     """
@@ -178,7 +174,6 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, L
         enriched_rows.append(enriched_row)
     
     return enriched_rows, match_count, term_match_no_ref_count
-
 
 def output_results_to_csv(enriched_rows: List[Dict[str, str]], output_filename: str = 'word_analysis.csv'):
     """
@@ -268,7 +263,6 @@ def main():
         print("\nFull traceback:")
         traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

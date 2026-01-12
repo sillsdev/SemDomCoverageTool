@@ -2,7 +2,6 @@ import csv
 import sys
 from typing import Dict, List
 
-
 def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     """
     Load the LN code to semantic domain mapping from CSV.
@@ -40,7 +39,6 @@ def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
         
     return ln_map
 
-
 def load_word_louw_nida_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
     Load the word/LN analysis CSV file.
@@ -68,7 +66,6 @@ def load_word_louw_nida_analysis(csv_file: str) -> List[Dict[str, str]]:
         sys.exit(1)
         
     return rows
-
 
 def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: str = 'word_sem_dom_analysis.csv'):
     """
@@ -189,7 +186,6 @@ def main():
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
