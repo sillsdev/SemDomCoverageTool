@@ -87,8 +87,8 @@ def load_word_sem_dom_analysis(csv_file: str) -> List[Dict[str, str]]:
     try:
         with open(csv_file, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f, delimiter='\t')
-            if not all(field in reader.fieldnames for field in ['Greek_Word', 'Refs']):
-                print("Error: Word/domain analysis CSV must contain 'Greek_Word' and 'Refs' columns.")
+            if not all(field in reader.fieldnames for field in ['Greek_Word', 'Greek_Forms', 'Refs']):
+                print("Error: Word/domain analysis CSV must contain 'Greek_Word', 'Greek_Forms', and 'Refs' columns.")
                 sys.exit(1)
             
             for row in reader:
@@ -158,14 +158,17 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, L
                     if verbose:
                         print(f"  ~ {greek_word} ({len(term_entries)} terms found but no overlapping refs)")
         
-        # Create enriched row with new columns after Greek_Word
-        enriched_row = {'Greek_Word': row['Greek_Word']}
-        enriched_row['Meaning'] = meaning
-        enriched_row['Is_Key_Term'] = is_key_term
+        # Create enriched row with new columns after Greek_Forms
+        enriched_row = {
+            'Greek_Word': row['Greek_Word'],
+            'Greek_Forms': row['Greek_Forms'],
+            'Meaning': meaning,
+            'Is_Key_Term': is_key_term
+        }
         
         # Add remaining columns from original row
         for key, value in row.items():
-            if key != 'Greek_Word':
+            if key not in ['Greek_Word', 'Greek_Forms']:
                 enriched_row[key] = value
         
         enriched_rows.append(enriched_row)
