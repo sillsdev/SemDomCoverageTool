@@ -124,27 +124,31 @@ This project provides a reproducible workflow to:
 
    - `python codeAnalysis.py LouwNidaToSemDom.csv`
 
+### ... by semantic domain
+
 3. Generate coverage from LN-tagged text
 
    - `python semDomCoverageTool.py LouwNidaToSemDom.csv 03-luke.xml`
    - Output: `semantic_domains_coverage.csv` (you can rename/move as desired).
 
-4. Analyze word usage by LN code
+### ... by Greek term
+
+3. Analyze word usage by Louw-Nida code
 
    - `python wordLouwNidaAnalysisTool.py 03-luke.xml`
    - Output: `word_louw_nida_analysis.csv` (you can rename/move as desired).
 
-5. Enrich word analysis with semantic domain data
+4. Enrich word analysis with semantic domain data
 
    - `python wordSemDomAnalysisTool.py word_louw_nida_analysis.csv LouwNidaToSemDom.csv`
    - Output: `word_sem_dom_analysis.csv` (you can rename/move as desired).
 
-6. Extract biblical terms for a specific book
+5. Extract biblical terms for a specific book
 
    - `python biblicalTermsAnalysisTool.py BiblicalTerms.xml Luk`
    - Output: `luk_terms.csv` (you can rename/move as desired).
 
-7. Enrich word analysis with biblical key term meanings
+6. Enrich word analysis with biblical key term meanings
 
    - `python wordAnalysisTool.py luk_terms.csv word_sem_dom_analysis.csv`
    - Output: `word_analysis.csv` (you can rename/move as desired).
@@ -154,6 +158,7 @@ This project provides a reproducible workflow to:
 
 - Sample data files (if present):
   - `03-luke.xml` — data from [Clear-Bible/macula-greek](https://github.com/Clear-Bible/macula-greek)
+  - `BiblicalTerms.xml` — key Biblical terms, the authoritative list for Paratext.
   - `LouwNidaToSemDom.csv` — Mapping generated from best current FieldWorks semantic domain data.
   - `luke_semantic_domains_coverage.csv` — results of the output of the semDomCoverageTool for the Luke xml.
 - Dependencies: Python 3.x; standard library only (no third-party packages required).
