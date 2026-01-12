@@ -1,2 +1,5 @@
 # Temporary output files
 *.csv
+
+# Python files
+__pycache__/
