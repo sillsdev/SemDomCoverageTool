@@ -1,5 +1,2 @@
 # Temporary output files
-semantic_domains_coverage.csv
-word_analysis.csv
-word_louw_nida_analysis.csv
-word_sem_dom_analysis.csv
+*.csv
