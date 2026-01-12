@@ -77,13 +77,13 @@ def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[
 
 def load_word_sem_dom_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
-    Load the word/domain analysis CSV file.
+    Load the word/semantic domain analysis CSV file.
     
     Args:
-        csv_file: Path to the word_sem_dom_analysis.csv file
+        csv_file: Path to the word_sem_dom_analysis.csv file (produced by wordSemDomAnalysisTool.py)
         
     Returns:
-        List of dictionaries with word/domain analysis data
+        List of dictionaries with word/semantic domain analysis data
     """
     rows = []
     
@@ -258,8 +258,8 @@ def main():
         
         # 5. Report results
         print(f"\n**Match Summary:**")
-        print(f"  - Key term matches with overlapping references: {match_count}")
-        print(f"  - Term matches without overlapping references: {term_match_no_ref_count}")
+        print(f"  - Key term matches: {match_count}")
+        print(f"  - Terms with multiple matches and no common references: {term_match_no_ref_count}")
         print(f"  - Total word instances analyzed: {len(enriched_rows)}")
         
     except Exception as e:
