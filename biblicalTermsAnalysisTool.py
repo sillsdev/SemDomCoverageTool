@@ -1,62 +1,10 @@
 import xml.etree.ElementTree as ET
 import csv
 import sys
-import re
-from collections import defaultdict
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 
-# Bible book number to abbreviation mapping
-# 3-digit 1-based indexing: 001-039 = OT, 040-066 = NT
-BOOK_NUMBERS = {
-    '001': 'Gen', '002': 'Exo', '003': 'Lev', '004': 'Num', '005': 'Deu',
-    '006': 'Jos', '007': 'Jdg', '008': 'Rut', '009': '1Sa', '010': '2Sa',
-    '011': '1Ki', '012': '2Ki', '013': '1Ch', '014': '2Ch', '015': 'Ezr',
-    '016': 'Neh', '017': 'Est', '018': 'Job', '019': 'Psa', '020': 'Pro',
-    '021': 'Ecc', '022': 'Sng', '023': 'Isa', '024': 'Jer', '025': 'Lam',
-    '026': 'Ezk', '027': 'Dan', '028': 'Hos', '029': 'Jol', '030': 'Amo',
-    '031': 'Oba', '032': 'Jon', '033': 'Mic', '034': 'Nam', '035': 'Hab',
-    '036': 'Zep', '037': 'Hag', '038': 'Zec', '039': 'Mal',
-    '040': 'Mat', '041': 'Mrk', '042': 'Luk', '043': 'Jhn', '044': 'Act',
-    '045': 'Rom', '046': '1Co', '047': '2Co', '048': 'Gal', '049': 'Eph',
-    '050': 'Php', '051': 'Col', '052': '1Th', '053': '2Th', '054': '1Ti',
-    '055': '2Ti', '056': 'Tit', '057': 'Phm', '058': 'Heb', '059': 'Jas',
-    '060': '1Pe', '061': '2Pe', '062': '1Jn', '063': '2Jn', '064': '3Jn',
-    '065': 'Jud', '066': 'Rev',
-}
+from utils import BOOK_NUMBERS, BOOK_NAMES, clean_term_id, parse_verse_reference
 
-# Reverse mapping for book name to number
-BOOK_NAMES = {v.lower(): k for k, v in BOOK_NUMBERS.items()}
-
-def parse_verse_reference(verse_code: str) -> Optional[Tuple[str, str, str, str]]:
-    """
-    Convert numeric reference format BBBCCCVVVWWWWW to (book_abbr, chapter, verse, word).
-    Book: 3 digits, Chapter: 3 digits, Verse: 3 digits, Word: 5 digits.
-    
-    Args:
-        verse_code: Numeric code like '04203000300000'
-        
-    Returns:
-        Tuple of (book_abbr, chapter, verse, word_position) or None if invalid
-    """
-    if len(verse_code) < 11:
-        return None
-    
-    book_num = verse_code[0:3]
-    chapter = verse_code[3:6]
-    verse = verse_code[6:9]
-    word = verse_code[9:14]
-    
-    if book_num not in BOOK_NUMBERS:
-        return None
-    
-    book_abbr = BOOK_NUMBERS[book_num]
-    
-    # Remove leading zeros
-    chapter = str(int(chapter))
-    verse = str(int(verse))
-    word = str(int(word))
-    
-    return (book_abbr, chapter, verse, word)
 
 def load_biblical_terms(xml_file: str) -> List[Dict]:
     """
@@ -107,21 +55,6 @@ def load_biblical_terms(xml_file: str) -> List[Dict]:
     
     return terms
 
-def clean_term_id(term_id: str) -> str:
-    """
-    Remove "-#" or "(DC)" suffix from term ID.
-    
-    Args:
-        term_id: The raw term ID
-        
-    Returns:
-        Cleaned term ID
-    """
-    # Remove (DC) suffix
-    term_id = re.sub(r'\(DC\)$', '', term_id)
-    # Remove -# suffix (one or more digits after a dash)
-    term_id = re.sub(r'-\d+$', '', term_id)
-    return term_id.strip()
 
 def filter_and_format_terms(terms: List[Dict], book_name: str) -> List[Dict]:
     """
@@ -177,6 +110,7 @@ def filter_and_format_terms(terms: List[Dict], book_name: str) -> List[Dict]:
             })
     
     return result_terms
+
 
 def output_results_to_csv(terms: List[Dict], book_name: str, output_filename: str = None):
     """

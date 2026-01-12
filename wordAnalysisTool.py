@@ -1,46 +1,30 @@
 import csv
 import sys
-import re
-import unicodedata
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
-def remove_accents(text: str) -> str:
-    """
-    Remove accents from Greek text for accent-insensitive matching.
-    Uses NFD decomposition to separate base characters from combining marks.
-    
-    Args:
-        text: Greek text with possible accents
-        
-    Returns:
-        Text with accents removed
-    """
-    # NFD decomposition: separate base characters from combining marks
-    nfd = unicodedata.normalize('NFD', text)
-    # Filter out combining marks (category Mn = Mark, nonspacing)
-    return ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
+from utils import remove_accents, normalize_reference
 
-def normalize_reference(ref: str) -> str:
+
+def parse_refs_to_set(refs_str: str) -> Set[str]:
     """
-    Normalize a reference to Book Chapter:Verse format, ignoring word positions.
+    Parse a semicolon-separated reference string into a normalized set.
+    Filters out empty strings from normalization.
     
     Args:
-        ref: Reference string like "LUK 1:3" or "LUK 1:3!6" (word position after !)
+        refs_str: String like "Luk 1:1; Luk 1:3" or "LUK 19:2!6; LUK 19:8!3"
         
     Returns:
-        Normalized reference like "luk 1:3" (lowercase, no word position)
+        Set of normalized individual references
     """
-    # Remove word position if present (everything after !)
-    ref = ref.split('!')[0].strip()
-    
-    # Extract Book Chapter:Verse using regex
-    match = re.match(r'([A-Za-z0-9]+)\s+(\d+):(\d+)', ref)
-    if match:
-        book, chapter, verse = match.groups()
-        return f"{book.lower()} {chapter}:{verse}"
-    
-    return ""
+    refs_set = set()
+    if refs_str:
+        for ref in refs_str.split('; '):
+            normalized_ref = normalize_reference(ref)
+            if normalized_ref:  # Only add non-empty normalized references
+                refs_set.add(normalized_ref)
+    return refs_set
+
 
 def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[str, str]]]:
     """
@@ -90,12 +74,13 @@ def load_key_terms(csv_file: str, verbose: bool = False) -> Dict[str, List[Dict[
     
     return dict(key_terms)
 
-def load_word_domain_analysis(csv_file: str) -> List[Dict[str, str]]:
+
+def load_word_sem_dom_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
     Load the word/domain analysis CSV file.
     
     Args:
-        csv_file: Path to the word_domain_analysis.csv file
+        csv_file: Path to the word_sem_dom_analysis.csv file
         
     Returns:
         List of dictionaries with word/domain analysis data
@@ -117,24 +102,6 @@ def load_word_domain_analysis(csv_file: str) -> List[Dict[str, str]]:
     
     return rows
 
-def parse_refs_to_set(refs_str: str) -> Set[str]:
-    """
-    Parse a semicolon-separated reference string into a normalized set.
-    Filters out empty strings from normalization.
-    
-    Args:
-        refs_str: String like "Luk 1:1; Luk 1:3" or "LUK 19:2!6; LUK 19:8!3"
-        
-    Returns:
-        Set of normalized individual references
-    """
-    refs_set = set()
-    if refs_str:
-        for ref in refs_str.split('; '):
-            normalized_ref = normalize_reference(ref)
-            if normalized_ref:  # Only add non-empty normalized references
-                refs_set.add(normalized_ref)
-    return refs_set
 
 def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, List[Dict[str, str]]], verbose: bool = False) -> Tuple[List[Dict[str, str]], int, int]:
     """
@@ -212,6 +179,7 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, L
     
     return enriched_rows, match_count, term_match_no_ref_count
 
+
 def output_results_to_csv(enriched_rows: List[Dict[str, str]], output_filename: str = 'word_analysis.csv'):
     """
     Write enriched word analysis to a tab-separated CSV file.
@@ -253,9 +221,9 @@ def main():
         sys.argv.remove('--verbose')
     
     if len(sys.argv) != 3:
-        print("Usage: python wordAnalysisTool.py [--verbose] <key_terms.csv> <word_domain_analysis.csv>")
-        print("Example: python wordAnalysisTool.py luk_terms.csv word_domain_analysis.csv")
-        print("         python wordAnalysisTool.py --verbose luk_terms.csv word_domain_analysis.csv")
+        print("Usage: python wordAnalysisTool.py [--verbose] <key_terms.csv> <word_sem_dom_analysis.csv>")
+        print("Example: python wordAnalysisTool.py luk_terms.csv word_sem_dom_analysis.csv")
+        print("         python wordAnalysisTool.py --verbose luk_terms.csv word_sem_dom_analysis.csv")
         sys.exit(1)
     
     key_terms_file = sys.argv[1]
@@ -275,7 +243,7 @@ def main():
         
         # 2. Load word/domain analysis
         print("Loading word/domain analysis CSV...")
-        word_rows = load_word_domain_analysis(word_domain_file)
+        word_rows = load_word_sem_dom_analysis(word_domain_file)
         print(f"Loaded {len(word_rows)} word/domain analysis rows.")
         
         # 3. Enrich with key term information
@@ -300,6 +268,7 @@ def main():
         print("\nFull traceback:")
         traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

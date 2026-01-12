@@ -4,49 +4,8 @@ import sys
 from collections import defaultdict
 from typing import List, Tuple, Dict, Any
 
-def convert_domain_to_ln(domain_code: str) -> str:
-    """
-    Convert a domain code to LN format.
-    - 3 digits: remove leading zeros (e.g., "089" -> "89")
-    - 6 digits: first 3 digits (remove leading zeros) + last 3 digits as letter
-      (001->A, 002->B, ..., 026->Z, 027->A', 028->B', ..., 052->Z', 053->A", etc.)
-    
-    Args:
-        domain_code: "089" or "089017"
-        
-    Returns:
-        LN code like "89" or "89Q"
-    """
-    if len(domain_code) == 3:
-        return str(int(domain_code))
-    elif len(domain_code) == 6:
-        base = str(int(domain_code[:3]))
-        suffix_num = int(domain_code[3:])
-        
-        if suffix_num == 0:
-            return base
-        
-        # Convert suffix to letter format
-        # 001-026: A-Z, 027-052: A'-Z', 053-078: A"-Z"
-        letter_index = (suffix_num - 1) % 26
-        prime_count = (suffix_num - 1) // 26
-        
-        letter = chr(ord('A') + letter_index)
-        if prime_count == 0:
-            primes = ''
-        elif prime_count == 1:
-            primes = "'"
-        elif prime_count == 2:
-            primes = '"'
-        else:
-            # Unexpected prime count (> 2), beyond standard LN notation
-            print(f"WARNING: Domain code {domain_code} has unexpected suffix {suffix_num} (prime_count={prime_count})")
-            primes = ''
-        
-        return base + letter + primes
-    else:
-        # Unexpected format, return as-is
-        return domain_code
+from utils import convert_domain_to_ln
+
 
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
@@ -84,7 +43,8 @@ def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
 
     return xml_data
 
-def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_filename: str = 'word_ln_analysis.csv'):
+
+def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_filename: str = 'word_louw_nida_analysis.csv'):
     """
     Writes the aggregated word/LN code data to a tab-separated CSV file.
     
@@ -128,8 +88,8 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python wordLnAnalysisTool.py <annotated_xml_file>")
-        print("Example: python wordLnAnalysisTool.py your_file.xml")
+        print("Usage: python wordLouwNidaAnalysisTool.py <annotated_xml_file>")
+        print("Example: python wordLouwNidaAnalysisTool.py your_file.xml")
         sys.exit(1)
     
     xml_file = sys.argv[1]
@@ -158,6 +118,7 @@ def main():
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

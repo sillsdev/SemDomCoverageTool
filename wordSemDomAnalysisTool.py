@@ -1,7 +1,7 @@
 import csv
 import sys
-from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
+
 
 def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
     """
@@ -40,12 +40,13 @@ def load_ln_mapping(csv_file: str) -> Dict[str, Dict[str, str]]:
         
     return ln_map
 
-def load_word_ln_analysis(csv_file: str) -> List[Dict[str, str]]:
+
+def load_word_louw_nida_analysis(csv_file: str) -> List[Dict[str, str]]:
     """
     Load the word/LN analysis CSV file.
     
     Args:
-        csv_file: Path to the word_ln_analysis.csv file
+        csv_file: Path to the word_louw_nida_analysis.csv file
         
     Returns:
         List of dictionaries with word/LN analysis data
@@ -68,7 +69,8 @@ def load_word_ln_analysis(csv_file: str) -> List[Dict[str, str]]:
         
     return rows
 
-def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: str = 'word_domain_analysis.csv'):
+
+def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: str = 'word_sem_dom_analysis.csv'):
     """
     Writes the enriched word/domain data to a tab-separated CSV file.
     
@@ -81,7 +83,6 @@ def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: 
     
     fieldnames = [
         'Greek_Word',
-        'Ln_Domain',
         'SemDom',
         'SemDom_Name',
         'Total_Unique_References',
@@ -105,8 +106,8 @@ def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: 
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python wordDomainAnalysisTool.py <word_ln_analysis.csv> <ln_mapping.csv>")
-        print("Example: python wordDomainAnalysisTool.py word_ln_analysis.csv LouwNidaToSemDom.csv")
+        print("Usage: python wordSemDomAnalysisTool.py <word_louw_nida_analysis.csv> <ln_mapping.csv>")
+        print("Example: python wordSemDomAnalysisTool.py word_louw_nida_analysis.csv LouwNidaToSemDom.csv")
         sys.exit(1)
     
     word_ln_file = sys.argv[1]
@@ -124,7 +125,7 @@ def main():
         
         # 2. Load the word/LN analysis CSV
         print("Loading word/LN analysis CSV...")
-        word_ln_rows = load_word_ln_analysis(word_ln_file)
+        word_ln_rows = load_word_louw_nida_analysis(word_ln_file)
         print(f"Loaded {len(word_ln_rows)} word/LN pairs from analysis CSV.")
         
         # 3. Enrich data with semantic domain information
@@ -166,7 +167,6 @@ def main():
             # Create enriched row
             enriched_row = {
                 'Greek_Word': row['Greek_Word'],
-                'Ln_Domain': row['Ln_Domain'],
                 'SemDom': ';'.join(sem_doms) if sem_doms else '',
                 'SemDom_Name': ';'.join(sem_dom_names) if sem_dom_names else '',
                 'Total_Unique_References': row['Total_Unique_References'],
@@ -189,6 +189,7 @@ def main():
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
