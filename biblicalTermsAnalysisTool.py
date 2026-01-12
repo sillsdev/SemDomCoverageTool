@@ -78,7 +78,7 @@ def filter_and_format_terms(terms: List[Dict], book_name: str) -> List[Dict]:
         print(f"DEBUG: Found book by accent-removed match: {book_name_lower} -> {book_num}")
     else:
         print(f"Error: Unknown book '{book_name}'")
-        print(f"Available books: {', '.join(sorted(BOOK_NAMES.keys()))}")
+        print(f"Available books: {', '.join(BOOK_NAMES.keys())}")
         sys.exit(1)
     
     # Get the target book abbreviation from the number

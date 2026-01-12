@@ -4,12 +4,10 @@ Common utility functions used across word analysis scripts.
 
 import re
 import unicodedata
-from typing import Set, Dict, Optional, Tuple
-
+from typing import Dict, Optional, Tuple
 
 #################################################################
 ## Greek text utilities
-
 
 def remove_accents(text: str) -> str:
     """
@@ -27,7 +25,6 @@ def remove_accents(text: str) -> str:
     # Filter out combining marks (category Mn = Mark, nonspacing)
     return ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
 
-
 def clean_term_id(term_id: str) -> str:
     """
     When extracting terms from `BiblicalTerms.xml`, remove "-#" or "(DC)" suffix from term ID.
@@ -44,10 +41,8 @@ def clean_term_id(term_id: str) -> str:
     term_id = re.sub(r'-\d+$', '', term_id)
     return term_id.strip()
 
-
 #################################################################
 ## Domain utilities
-
 
 def convert_domain_to_ln(domain_code: str) -> str:
     """
@@ -93,10 +88,8 @@ def convert_domain_to_ln(domain_code: str) -> str:
         # Unexpected format, return as-is
         return domain_code
 
-
 #################################################################
 ## Bible reference utilities
-
 
 def normalize_reference(ref: str) -> str:
     """
@@ -119,7 +112,6 @@ def normalize_reference(ref: str) -> str:
     
     return ""
 
-
 # Bible book number to abbreviation mapping
 # 3-digit 1-based indexing: 001-039 = OT, 040-066 = NT
 BOOK_NUMBERS: Dict[str, str] = {
@@ -139,10 +131,8 @@ BOOK_NUMBERS: Dict[str, str] = {
     '065': 'Jud', '066': 'Rev',
 }
 
-
 # Reverse mapping for book name to number
 BOOK_NAMES: Dict[str, str] = {v.lower(): k for k, v in BOOK_NUMBERS.items()}
-
 
 def parse_verse_reference(verse_code: str) -> Optional[Tuple[str, str, str, str]]:
     """
