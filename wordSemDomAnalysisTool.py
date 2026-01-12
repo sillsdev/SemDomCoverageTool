@@ -80,6 +80,7 @@ def output_results_to_csv(enriched_data: List[Dict[str, str]], output_filename: 
     
     fieldnames = [
         'Greek_Word',
+        'Greek_Forms',
         'SemDom',
         'SemDom_Name',
         'Total_Unique_References',
@@ -139,7 +140,6 @@ def main():
             # Look up each LN code and collect results
             sem_doms = []
             sem_dom_names = []
-            all_matched = True
             
             for ln_code in ln_codes:
                 csv_info = None
@@ -159,11 +159,11 @@ def main():
                     sem_dom_names.append(csv_info['SemDom_Name'])
                 else:
                     unmatched_codes.add(ln_code)
-                    all_matched = False
             
             # Create enriched row
             enriched_row = {
                 'Greek_Word': row['Greek_Word'],
+                'Greek_Forms': row['Greek_Forms'],
                 'SemDom': ';'.join(sem_doms) if sem_doms else '',
                 'SemDom_Name': ';'.join(sem_dom_names) if sem_dom_names else '',
                 'Total_Unique_References': row['Total_Unique_References'],

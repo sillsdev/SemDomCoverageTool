@@ -118,7 +118,7 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, L
     term_match_no_ref_count = 0
     
     for row in word_rows:
-        greek_word = row['Greek_Word'].strip()
+        greek_word = row['Greek_Word'].strip() # Already normalized
         word_refs_str = row['Refs'].strip()
         word_refs_set = parse_refs_to_set(word_refs_str)
         
@@ -126,11 +126,8 @@ def enrich_word_analysis(word_rows: List[Dict[str, str]], key_terms: Dict[str, L
         meaning = "unknown"
         is_key_term = "no"
         
-        # Normalize the Greek word for accent-insensitive lookup
-        greek_word_normalized = remove_accents(greek_word)
-        
-        if greek_word_normalized in key_terms:
-            term_entries = key_terms[greek_word_normalized]
+        if greek_word in key_terms:
+            term_entries = key_terms[greek_word]
             
             # If only one key term entry, use it
             if len(term_entries) == 1:

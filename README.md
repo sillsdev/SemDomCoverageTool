@@ -46,7 +46,8 @@ This project provides a reproducible workflow to:
   - Purpose: Analyze word usage by Louw/Nida domain code in an annotated Greek text. Converts domain codes (from `domain` attribute) to LN format.
   - Input: Annotated text XML where tokens (`<w>` elements) are marked with domain codes (numeric 3-digit or 6-digit format).
   - Output: word_louw_nida_analysis.csv containing, per (word, LN code) pair:
-    - Greek_Word
+    - Greek_Word (without accents)
+    - Greek_Forms (with accents, semicolon-separated)
     - Ln_Domain (LN code in format like "89", "89Q", "23C", etc.; semicolon-separated if multiple domains)
     - Total_Unique_References
     - Refs (semicolon-separated list of all references with word positions, e.g., "LUK 1:5!44; LUK 1:55!16")
@@ -59,7 +60,7 @@ This project provides a reproducible workflow to:
   - Inputs:
     - word_louw_nida_analysis.csv produced by wordLouwNidaAnalysisTool.py.
     - Mapping CSV (e.g., LouwNidaToSemDom.csv) produced by louwNidaMapper.py.
-  - Output: word_sem_dom_analysis.csv containing all columns from word_louw_nida_analysis.csv plus:
+  - Output: word_sem_dom_analysis.csv containing all columns from word_louw_nida_analysis.csv, minus Ln_Domain, plus:
     - SemDom (semantic domain code; semicolon-separated if multiple LN domains map to different semantic domains)
     - SemDom_Name (semantic domain name; semicolon-separated if multiple)
   - Note: For semicolon-separated LN codes (e.g., "23C;58D"), looks up each code independently and joins the results. Includes fallback matching (strips letters/primes if code not found).

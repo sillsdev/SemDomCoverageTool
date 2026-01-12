@@ -4,7 +4,7 @@ import sys
 from collections import defaultdict
 from typing import List, Tuple, Dict, Any
 
-from utils import convert_domain_to_ln
+from utils import convert_domain_to_ln, remove_accents
 
 def extract_ln_data_from_xml(xml_file: str) -> List[Tuple[str, str, str]]:
     """
@@ -47,7 +47,8 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
     Writes the aggregated word/LN code data to a tab-separated CSV file.
     
     Args:
-        aggregated_data: Dictionary with (word, ln_code) tuples as keys
+        aggregated_data: Dictionary with (word_unaccented, ln_code) tuples as keys,
+                        values are dicts with 'forms' (set of accented forms) and 'refs' (set of references)
         output_filename: Output CSV filename
     """
     
@@ -55,6 +56,7 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
     
     fieldnames = [
         'Greek_Word',
+        'Greek_Forms',
         'Ln_Domain',
         'Total_Unique_References',
         'Refs'
@@ -66,11 +68,14 @@ def output_results_to_csv(aggregated_data: Dict[Tuple[str, str], Any], output_fi
             writer.writeheader()
             
             # Write rows, sorted by word and then by LN code
-            for (word, ln_code) in sorted(aggregated_data.keys()):
-                refs = sorted(list(aggregated_data[(word, ln_code)]))
+            for (word_unaccented, ln_code) in sorted(aggregated_data.keys()):
+                data = aggregated_data[(word_unaccented, ln_code)]
+                refs = sorted(list(data['refs']))
+                forms = sorted(list(data['forms']))
                 
                 row = {
-                    'Greek_Word': word,
+                    'Greek_Word': word_unaccented,
+                    'Greek_Forms': "; ".join(forms),
                     'Ln_Domain': ln_code,
                     'Total_Unique_References': len(refs),
                     'Refs': "; ".join(refs)
@@ -102,11 +107,13 @@ def main():
         xml_ln_data = extract_ln_data_from_xml(xml_file)
         print(f"Found {len(xml_ln_data)} LN-annotated words in XML.")
         
-        # 2. Aggregate data by (word, LN code) pair
-        aggregated_data = defaultdict(set)  # (word, ln_code) -> set of references
+        # 2. Aggregate data by (word_unaccented, LN code) pair
+        aggregated_data = defaultdict(lambda: {'forms': set(), 'refs': set()})
         
         for ln_code, word, reference in xml_ln_data:
-            aggregated_data[(word, ln_code)].add(reference)
+            word_unaccented = remove_accents(word)
+            aggregated_data[(word_unaccented, ln_code)]['forms'].add(word)
+            aggregated_data[(word_unaccented, ln_code)]['refs'].add(reference)
                 
         print(f"Aggregated data for {len(aggregated_data)} unique (word, LN code) pairs.")
 
