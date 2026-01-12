@@ -114,6 +114,8 @@ def normalize_reference(ref: str) -> str:
 
 # Bible book number to abbreviation mapping
 # 3-digit 1-based indexing: 001-039 = OT, 040-066 = NT
+# Codes from libpalaso: SIL.Scripture.Cannon.AllBookIds
+# https://github.com/sillsdev/libpalaso/blob/v16.2.0/SIL.Scripture/Canon.cs#L226
 BOOK_NUMBERS: Dict[str, str] = {
     '001': 'Gen', '002': 'Exo', '003': 'Lev', '004': 'Num', '005': 'Deu',
     '006': 'Jos', '007': 'Jdg', '008': 'Rut', '009': '1Sa', '010': '2Sa',
